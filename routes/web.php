@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicBookingController;
 use Illuminate\Foundation\Application;
@@ -41,6 +42,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/dashboard', function () {
+        return redirect()->route('admin.schedules.index');
+    })->name('dashboard');
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/schedules', [AdminScheduleController::class, 'index'])->name('schedules.index');
+        Route::get('/schedules/create', [AdminScheduleController::class, 'create'])->name('schedules.create');
+        Route::post('/schedules', [AdminScheduleController::class, 'store'])->name('schedules.store');
+    });
 });
 
 require __DIR__.'/auth.php';
