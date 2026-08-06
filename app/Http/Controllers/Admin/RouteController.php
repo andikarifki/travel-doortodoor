@@ -9,7 +9,6 @@ use Inertia\Inertia;
 
 class RouteController extends Controller
 {
-    // List Rute
     public function index()
     {
         return Inertia::render('Admin/Routes/Index', [
@@ -17,13 +16,11 @@ class RouteController extends Controller
         ]);
     }
 
-    // Form Tambah Rute
     public function create()
     {
         return Inertia::render('Admin/Routes/Create');
     }
 
-    // Simpan Rute Baru
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -37,32 +34,34 @@ class RouteController extends Controller
         return redirect()->route('admin.routes.index')->with('success', 'Rute berhasil ditambahkan.');
     }
 
-    // Form Edit Rute
-    public function edit(TravelRoute $route)
+    public function edit($id)
     {
+        $travelRoute = TravelRoute::findOrFail($id);
+
         return Inertia::render('Admin/Routes/Edit', [
-            'route' => $route,
+            'routeData' => $travelRoute, // Menggunakan key 'routeData' agar tidak bentrok dengan keyword 'route' di Vue
         ]);
     }
 
-    // Update Rute
-    public function update(Request $request, TravelRoute $route)
+    public function update(Request $request, $id)
     {
+        $travelRoute = TravelRoute::findOrFail($id);
+
         $validated = $request->validate([
             'origin' => 'required|string|max:255',
             'destination' => 'required|string|max:255',
             'base_price' => 'required|numeric|min:0',
         ]);
 
-        $route->update($validated);
+        $travelRoute::where('id', $id)->update($validated);
 
         return redirect()->route('admin.routes.index')->with('success', 'Rute berhasil diperbarui.');
     }
 
-    // Hapus Rute
-    public function destroy(TravelRoute $route)
+    public function destroy($id)
     {
-        $route->delete();
+        $travelRoute = TravelRoute::findOrFail($id);
+        $travelRoute->delete();
 
         return redirect()->route('admin.routes.index')->with('success', 'Rute berhasil dihapus.');
     }

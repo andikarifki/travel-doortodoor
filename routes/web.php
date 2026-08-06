@@ -52,10 +52,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/schedules/create', [AdminScheduleController::class, 'create'])->name('schedules.create');
         Route::post('/schedules', [AdminScheduleController::class, 'store'])->name('schedules.store');
         Route::get('/schedules/{schedule}', [AdminScheduleController::class, 'show'])->name('schedules.show');
+        Route::get('/schedules/{schedule}/edit', [AdminScheduleController::class, 'edit'])->name('schedules.edit');
+        Route::put('/schedules/{schedule}', [AdminScheduleController::class, 'update'])->name('schedules.update');
+        Route::delete('/schedules/{schedule}', [AdminScheduleController::class, 'destroy'])->name('schedules.destroy');
         // Vehicles (Armada)
         Route::resource('vehicles', AdminVehicleController::class);
-        // Routes (Rute Travel)
-        Route::resource('routes', AdminRouteController::class);
+        // Routes (Dideklarasikan eksplisit menggunakan {id})
+        Route::get('/routes', [AdminRouteController::class, 'index'])->name('routes.index');
+        Route::get('/routes/create', [AdminRouteController::class, 'create'])->name('routes.create');
+        Route::post('/routes', [AdminRouteController::class, 'store'])->name('routes.store');
+        Route::get('/routes/{id}/edit', [AdminRouteController::class, 'edit'])->name('routes.edit');
+        Route::put('/routes/{id}', [AdminRouteController::class, 'update'])->name('routes.update');
+        Route::delete('/routes/{id}', [AdminRouteController::class, 'destroy'])->name('routes.destroy');
     });
 });
 
