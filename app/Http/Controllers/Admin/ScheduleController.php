@@ -60,6 +60,58 @@ class ScheduleController extends Controller
         return redirect()->route('admin.schedules.index')->with('success', 'Jadwal berhasil ditambahkan.');
     }
 
+    // Form Edit Jadwal
+    public function edit(Schedule $schedule)
+    {
+        $schedule->load('manifest');
+
+        return Inertia::render('Admin/Schedules/Edit', [
+            'schedule' => $schedule,
+            'routes' => TravelRoute::all(),
+            'vehicles' => Vehicle::all(),
+            'drivers' => User::where('role', 'driver')->get(),
+        ]);
+    }
+
+    // Update Data Jadwal & Assign Driver
+    public function update(Request $request, Schedule $schedule)
+    {
+        $validated = $request->validate([
+            'route_id' => 'required|exists:routes,id',
+            'vehicle_id' => 'required|exists:vehicles,id',
+            'departure_time' => 'required|date',
+            'driver_id' => 'nullable|exists:users,id',
+        ]);
+
+        // 1. Update Jadwal
+        $schedule->update([
+            'route_id' => $validated['route_id'],
+            'vehicle_id' => $validated['vehicle_id'],
+            'departure_time' => $validated['departure_time'],
+        ]);
+
+        // 2. Update atau Buat Trip Manifest untuk Driver
+        TripManifest::updateOrCreate(
+            ['schedule_id' => $schedule->id],
+            [
+                'driver_id' => $validated['driver_id'] ?? null,
+                'status' => 'scheduled',
+            ]
+        );
+
+        return redirect()->route('admin.schedules.index')->with('success', 'Jadwal berhasil diperbarui.');
+    }
+
+    // Hapus Jadwal
+    public function destroy(Schedule $schedule)
+    {
+        // Hapus manifest terkait dulu jika ada
+        $schedule->manifest()->delete();
+        $schedule->delete();
+
+        return redirect()->route('admin.schedules.index')->with('success', 'Jadwal berhasil dihapus.');
+    }
+
     // 4. Detail Pemesan / Customer per Jadwal
     public function show(Schedule $schedule)
     {

@@ -52,6 +52,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/schedules/create', [AdminScheduleController::class, 'create'])->name('schedules.create');
         Route::post('/schedules', [AdminScheduleController::class, 'store'])->name('schedules.store');
         Route::get('/schedules/{schedule}', [AdminScheduleController::class, 'show'])->name('schedules.show');
+        Route::get('/schedules/{schedule}/edit', [AdminScheduleController::class, 'edit'])->name('schedules.edit');
+        Route::put('/schedules/{schedule}', [AdminScheduleController::class, 'update'])->name('schedules.update');
+        Route::delete('/schedules/{schedule}', [AdminScheduleController::class, 'destroy'])->name('schedules.destroy');
         // Vehicles (Armada)
         Route::resource('vehicles', AdminVehicleController::class);
         // Routes (Rute Travel)

@@ -85,6 +85,18 @@ const formatDate = (dateStr) => {
                                 >
                                     Lihat Customer &rarr;
                                 </Link>
+                                <Link
+                                    :href="route('admin.schedules.edit', s.id)"
+                                    class="text-xs text-amber-600 hover:underline font-semibold"
+                                >
+                                    Edit
+                                </Link>
+                                <button
+                                    @click="deleteSchedule(s.id)"
+                                    class="text-xs text-red-600 hover:underline font-semibold"
+                                >
+                                    Hapus
+                                </button>
                             </td>
                         </tr>
                         <tr v-if="schedules.length === 0">
