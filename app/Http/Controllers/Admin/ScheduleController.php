@@ -13,7 +13,7 @@ use Inertia\Inertia;
 
 class ScheduleController extends Controller
 {
-    // Halaman List Jadwal
+    // 1. Halaman List Jadwal
     public function index()
     {
         $schedules = Schedule::with(['route', 'vehicle', 'manifest.driver', 'bookings'])
@@ -25,7 +25,7 @@ class ScheduleController extends Controller
         ]);
     }
 
-    // Halaman Form Tambah Jadwal
+    // 2. Halaman Form Tambah Jadwal
     public function create()
     {
         return Inertia::render('Admin/Schedules/Create', [
@@ -35,7 +35,7 @@ class ScheduleController extends Controller
         ]);
     }
 
-    // Simpan Jadwal
+    // 3. Simpan Jadwal Baru
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -58,5 +58,20 @@ class ScheduleController extends Controller
         ]);
 
         return redirect()->route('admin.schedules.index')->with('success', 'Jadwal berhasil ditambahkan.');
+    }
+
+    // 4. Detail Pemesan / Customer per Jadwal
+    public function show(Schedule $schedule)
+    {
+        $schedule->load([
+            'route',
+            'vehicle',
+            'manifest.driver',
+            'bookings.seats', // Mengambil data pemesan & nomor kursi
+        ]);
+
+        return Inertia::render('Admin/Schedules/Show', [
+            'schedule' => $schedule,
+        ]);
     }
 }

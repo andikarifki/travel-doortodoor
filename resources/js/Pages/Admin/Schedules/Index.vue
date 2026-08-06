@@ -44,6 +44,7 @@ const formatDate = (dateStr) => {
                             <th class="p-4">Armada</th>
                             <th class="p-4">Driver</th>
                             <th class="p-4">Total Booking</th>
+                            <th class="p-4 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -70,16 +71,25 @@ const formatDate = (dateStr) => {
                                 <span
                                     v-else
                                     class="text-xs text-gray-400 italic"
-                                    >Belum Ada Driver</span
                                 >
+                                    Belum Ada Driver
+                                </span>
                             </td>
                             <td class="p-4 font-bold">
                                 {{ s.bookings.length }} Pemesan
                             </td>
+                            <td class="p-4 text-right">
+                                <Link
+                                    :href="route('admin.schedules.show', s.id)"
+                                    class="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-lg border border-indigo-100 hover:bg-indigo-100"
+                                >
+                                    Lihat Customer &rarr;
+                                </Link>
+                            </td>
                         </tr>
                         <tr v-if="schedules.length === 0">
                             <td
-                                colspan="5"
+                                colspan="6"
                                 class="p-6 text-center text-gray-400"
                             >
                                 Belum ada jadwal yang dibuat.

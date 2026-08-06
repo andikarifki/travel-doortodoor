@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/schedules', [AdminScheduleController::class, 'index'])->name('schedules.index');
         Route::get('/schedules/create', [AdminScheduleController::class, 'create'])->name('schedules.create');
         Route::post('/schedules', [AdminScheduleController::class, 'store'])->name('schedules.store');
+        Route::get('/schedules/{schedule}', [AdminScheduleController::class, 'show'])->name('schedules.show');
         // Vehicles (Armada)
         Route::resource('vehicles', AdminVehicleController::class);
         // Routes (Rute Travel)
