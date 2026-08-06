@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
+use App\Http\Controllers\Admin\VehicleController as AdminVehicleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicBookingController;
 use Illuminate\Foundation\Application;
@@ -49,6 +50,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/schedules', [AdminScheduleController::class, 'index'])->name('schedules.index');
         Route::get('/schedules/create', [AdminScheduleController::class, 'create'])->name('schedules.create');
         Route::post('/schedules', [AdminScheduleController::class, 'store'])->name('schedules.store');
+        // Vehicles (Armada)
+        Route::resource('vehicles', AdminVehicleController::class);
     });
 });
 
