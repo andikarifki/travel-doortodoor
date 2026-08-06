@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\RouteController as AdminRouteController;
 use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
 use App\Http\Controllers\Admin\VehicleController as AdminVehicleController;
 use App\Http\Controllers\ProfileController;
@@ -52,6 +53,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/schedules', [AdminScheduleController::class, 'store'])->name('schedules.store');
         // Vehicles (Armada)
         Route::resource('vehicles', AdminVehicleController::class);
+        // Routes (Rute Travel)
+        Route::resource('routes', AdminRouteController::class);
     });
 });
 
