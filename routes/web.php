@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DriverController as AdminDriverController;
 use App\Http\Controllers\Admin\RouteController as AdminRouteController;
 use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
 use App\Http\Controllers\Admin\VehicleController as AdminVehicleController;
@@ -64,6 +65,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/routes/{id}/edit', [AdminRouteController::class, 'edit'])->name('routes.edit');
         Route::put('/routes/{id}', [AdminRouteController::class, 'update'])->name('routes.update');
         Route::delete('/routes/{id}', [AdminRouteController::class, 'destroy'])->name('routes.destroy');
+        // Drivers (Kelola Akun Sopir)
+        Route::get('/drivers', [AdminDriverController::class, 'index'])->name('drivers.index');
+        Route::get('/drivers/create', [AdminDriverController::class, 'create'])->name('drivers.create');
+        Route::post('/drivers', [AdminDriverController::class, 'store'])->name('drivers.store');
+        Route::delete('/drivers/{id}', [AdminDriverController::class, 'destroy'])->name('drivers.destroy');
     });
 });
 
