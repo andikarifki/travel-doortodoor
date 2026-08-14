@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from "@inertiajs/vue3";
+import { Head, Link, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
 const props = defineProps({
@@ -21,10 +21,39 @@ const formatRupiah = (val) => {
     }).format(val);
 };
 
-const formatWA = (phone) => {
-    let clean = phone.replace(/[^0-9]/g, "");
+// Fungsi generate link WhatsApp dengan teks konfirmasi E-Tiket otomatis
+const formatWA = (booking) => {
+    let clean = booking.customer_phone.replace(/[^0-9]/g, "");
     if (clean.startsWith("0")) clean = "62" + clean.slice(1);
-    return `https://wa.me/${clean}`;
+
+    // Ambil daftar nomor kursi
+    const seatNumbers = booking.seats
+        ? booking.seats.map((s) => s.seat_number).join(", ")
+        : "-";
+
+    // Template Pesan Konfirmasi / E-Tiket
+    const message =
+        `*[KONFIRMASI E-TIKET TRAVEL]*\n\n` +
+        `Halo *${booking.customer_name}*,\n` +
+        `Pemesanan travel Anda telah dikonfirmasi!\n\n` +
+        `📋 *DETAIL PEMESANAN:*\n` +
+        `• Kode Booking: #${booking.booking_code}\n` +
+        `• Rute: ${props.schedule.route.origin} ➔ ${props.schedule.route.destination}\n` +
+        `• Jadwal: ${formatDate(props.schedule.departure_time)}\n` +
+        `• No. Kursi: ${seatNumbers}\n` +
+        `• Total Bayar: ${formatRupiah(booking.total_amount)}\n\n` +
+        `📍 *LOKASI PENJEMPUTAN:*\n` +
+        `${booking.pick_up_address}\n\n` +
+        ` Driver kami akan menghubungi Anda menjelang jam keberangkatan. Terima kasih!`;
+
+    return `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
+};
+
+// Fungsi Ubah Status Pembayaran
+const changeStatus = (bookingId, newStatus) => {
+    router.patch(route("admin.bookings.update-status", bookingId), {
+        status: newStatus,
+    });
 };
 </script>
 
@@ -48,9 +77,10 @@ const formatWA = (phone) => {
                 </div>
                 <Link
                     :href="route('admin.schedules.index')"
-                    class="text-xs text-gray-600 bg-gray-100 px-3 py-2 rounded-lg border"
-                    >&larr; Kembali</Link
+                    class="text-xs text-gray-600 bg-gray-100 px-3 py-2 rounded-lg border hover:bg-gray-200 transition"
                 >
+                    &larr; Kembali
+                </Link>
             </div>
         </template>
 
@@ -63,11 +93,11 @@ const formatWA = (phone) => {
                     <span class="text-xs text-gray-400 block"
                         >Armada / Mobil</span
                     >
-                    <span class="font-bold text-gray-800"
-                        >{{ schedule.vehicle.name }} ({{
+                    <span class="font-bold text-gray-800">
+                        {{ schedule.vehicle.name }} ({{
                             schedule.vehicle.license_plate
-                        }})</span
-                    >
+                        }})
+                    </span>
                 </div>
                 <div
                     class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm"
@@ -75,9 +105,12 @@ const formatWA = (phone) => {
                     <span class="text-xs text-gray-400 block"
                         >Sopir / Driver</span
                     >
-                    <span class="font-bold text-emerald-600">{{
-                        schedule.manifest?.driver?.name || "Belum Ditugaskan"
-                    }}</span>
+                    <span class="font-bold text-emerald-600">
+                        {{
+                            schedule.manifest?.driver?.name ||
+                            "Belum Ditugaskan"
+                        }}
+                    </span>
                 </div>
                 <div
                     class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm"
@@ -85,20 +118,18 @@ const formatWA = (phone) => {
                     <span class="text-xs text-gray-400 block"
                         >Total Pemesan</span
                     >
-                    <span class="font-bold text-indigo-600"
-                        >{{ schedule.bookings.length }} Transaksi</span
-                    >
+                    <span class="font-bold text-indigo-600">
+                        {{ schedule.bookings.length }} Transaksi
+                    </span>
                 </div>
             </div>
 
-            <!-- Tabel Daftar Customer yang Mendaftar -->
+            <!-- Tabel Daftar Customer -->
             <div
                 class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
             >
                 <div class="p-4 border-b border-gray-100">
-                    <h3 class="font-bold text-gray-800">
-                        Daftar Customer (Guest Booking)
-                    </h3>
+                    <h3 class="font-bold text-gray-800">Daftar Customer</h3>
                 </div>
 
                 <table class="w-full text-left border-collapse text-sm">
@@ -109,7 +140,8 @@ const formatWA = (phone) => {
                             <th class="p-4">No. Kursi</th>
                             <th class="p-4">Alamat Jemput & Antar</th>
                             <th class="p-4">Total</th>
-                            <th class="p-4">Status</th>
+                            <th class="p-4">Status Pembayaran</th>
+                            <th class="p-4">Aksi WhatsApp</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -121,13 +153,9 @@ const formatWA = (phone) => {
                                 <div class="font-semibold text-gray-800">
                                     {{ b.customer_name }}
                                 </div>
-                                <a
-                                    :href="formatWA(b.customer_phone)"
-                                    target="_blank"
-                                    class="text-xs text-emerald-600 hover:underline"
-                                >
-                                    💬 {{ b.customer_phone }}
-                                </a>
+                                <div class="text-xs text-gray-500">
+                                    {{ b.customer_phone }}
+                                </div>
                             </td>
                             <td class="p-4">
                                 <span
@@ -159,16 +187,48 @@ const formatWA = (phone) => {
                                 {{ formatRupiah(b.total_amount) }}
                             </td>
                             <td class="p-4">
-                                <span
-                                    class="text-xs px-2.5 py-1 rounded-full font-semibold uppercase bg-amber-100 text-amber-800"
+                                <!-- Select Dropdown Ubah Status -->
+                                <select
+                                    :value="b.status"
+                                    @change="
+                                        changeStatus(b.id, $event.target.value)
+                                    "
+                                    class="text-xs font-semibold rounded-lg border-gray-300 py-1 px-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    :class="{
+                                        'bg-amber-50 text-amber-700 border-amber-300':
+                                            b.status === 'pending',
+                                        'bg-emerald-50 text-emerald-700 border-emerald-300':
+                                            b.status === 'confirmed',
+                                        'bg-red-50 text-red-700 border-red-300':
+                                            b.status === 'cancelled',
+                                    }"
                                 >
-                                    {{ b.status }}
-                                </span>
+                                    <option value="pending">
+                                        🟡 Pending (Belum Bayar)
+                                    </option>
+                                    <option value="confirmed">
+                                        🟢 Confirmed (Lunas)
+                                    </option>
+                                    <option value="cancelled">
+                                        🔴 Cancelled (Batal)
+                                    </option>
+                                </select>
+                            </td>
+                            <td class="p-4">
+                                <!-- Tombol Kirim WA Otomatis -->
+                                <a
+                                    :href="formatWA(b)"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg shadow-sm transition"
+                                >
+                                    💬 Kirim Tiket WA
+                                </a>
                             </td>
                         </tr>
                         <tr v-if="schedule.bookings.length === 0">
                             <td
-                                colspan="6"
+                                colspan="7"
                                 class="p-6 text-center text-gray-400"
                             >
                                 Belum ada customer yang mendaftar pada jadwal

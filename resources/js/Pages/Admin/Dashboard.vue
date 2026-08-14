@@ -2,6 +2,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
 
+// Set default value agar tidak error jika prop bernilai undefined / null
 const props = defineProps({
     stats: {
         type: Object,
@@ -9,7 +10,7 @@ const props = defineProps({
             total_bookings: 0,
             pending_bookings: 0,
             today_schedules: 0,
-            total_vehicles: 0,
+            total_drivers: 0,
         }),
     },
     recentBookings: {
@@ -18,6 +19,7 @@ const props = defineProps({
     },
 });
 
+// Penanganan aman untuk format Rupiah jika val bernilai null/undefined
 const formatRupiah = (val) => {
     if (val === null || val === undefined || isNaN(val)) return "Rp 0";
     return new Intl.NumberFormat("id-ID", {
@@ -47,7 +49,7 @@ const formatRupiah = (val) => {
                     >
                         Menu Kelola Data
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <!-- Menu Schedules -->
                         <Link
                             :href="route('admin.schedules.index')"
@@ -65,6 +67,26 @@ const formatRupiah = (val) => {
                             </h4>
                             <p class="text-xs text-gray-500 mt-1">
                                 Kelola jam & kuota keberangkatan
+                            </p>
+                        </Link>
+
+                        <!-- Menu Drivers -->
+                        <Link
+                            :href="route('admin.drivers.index')"
+                            class="p-5 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-indigo-500 hover:shadow-md transition group"
+                        >
+                            <div
+                                class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-3 group-hover:bg-emerald-600 group-hover:text-white transition"
+                            >
+                                👨‍✈️
+                            </div>
+                            <h4
+                                class="font-bold text-gray-800 group-hover:text-indigo-600 transition"
+                            >
+                                Akun Sopir / Driver
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Kelola data & akun login sopir
                             </p>
                         </Link>
 
@@ -146,10 +168,10 @@ const formatRupiah = (val) => {
                         class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm"
                     >
                         <span class="text-xs text-emerald-600 font-medium"
-                            >Total Armada</span
+                            >Total Driver</span
                         >
                         <p class="text-2xl font-black text-emerald-600 mt-1">
-                            {{ stats?.total_vehicles ?? 0 }}
+                            {{ stats?.total_drivers ?? 0 }}
                         </p>
                     </div>
                 </div>
@@ -191,10 +213,7 @@ const formatRupiah = (val) => {
                                         {{ b.customer_name }}
                                     </td>
                                     <td class="px-4 py-3">
-                                        {{
-                                            b.schedule?.route?.origin ?? "-"
-                                        }}
-                                        &rarr;
+                                        {{ b.schedule?.route?.origin ?? "-" }} →
                                         {{
                                             b.schedule?.route?.destination ??
                                             "-"

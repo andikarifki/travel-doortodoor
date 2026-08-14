@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Schedule;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -105,5 +107,31 @@ class PublicBookingController extends Controller
         return Inertia::render('Public/Success', [
             'booking' => $booking,
         ]);
+    }
+
+    // 5. Cetak E-Tiket PDF (Diperbaiki agar tidak blank)
+    public function downloadTicket($booking_code)
+    {
+        // Naikkan batas memori sementara agar DOMPDF tidak kehabisan RAM
+        ini_set('memory_limit', '256M');
+
+        try {
+            $booking = Booking::with(['schedule.route', 'schedule.vehicle', 'seats'])
+                ->where('booking_code', $booking_code)
+                ->firstOrFail();
+
+            $pdf = Pdf::loadView('pdf.ticket', compact('booking'))
+                ->setPaper('a4', 'portrait')
+                ->setOption([
+                    'isRemoteEnabled' => true,
+                    'defaultFont' => 'sans-serif',
+                ]);
+
+            return $pdf->stream("E-Tiket-{$booking->booking_code}.pdf");
+
+        } catch (Exception $e) {
+            // Jika terjadi error, tampilkan detail pesan error alih-alih layar putih polos
+            return response('Gagal memproses E-Tiket PDF: '.$e->getMessage(), 500);
+        }
     }
 }

@@ -1,27 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DriverController as AdminDriverController;
 use App\Http\Controllers\Admin\RouteController as AdminRouteController;
 use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
 use App\Http\Controllers\Admin\VehicleController as AdminVehicleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicBookingController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
-
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 /*
 |--------------------------------------------------------------------------
@@ -41,14 +27,27 @@ Route::post('/booking', [PublicBookingController::class, 'store'])->name('bookin
 // Halaman konfirmasi / e-ticket
 Route::get('/booking/success/{code}', [PublicBookingController::class, 'success'])->name('booking.success');
 
+// Stream/Download E-Tiket PDF (Public Akses agar customer bisa cetak)
+Route::get('/booking/ticket/{booking_code}', [PublicBookingController::class, 'downloadTicket'])->name('booking.ticket');
+
+/*
+|--------------------------------------------------------------------------
+| Admin Routes (Wajib Auth)
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('auth')->group(function () {
+    // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('/dashboard', function () {
-        return redirect()->route('admin.schedules.index');
-    })->name('dashboard');
+
+    // Dashboard Utama Admin
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    // Admin Group
     Route::prefix('admin')->name('admin.')->group(function () {
+        // Schedules
         Route::get('/schedules', [AdminScheduleController::class, 'index'])->name('schedules.index');
         Route::get('/schedules/create', [AdminScheduleController::class, 'create'])->name('schedules.create');
         Route::post('/schedules', [AdminScheduleController::class, 'store'])->name('schedules.store');
@@ -56,15 +55,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/schedules/{schedule}/edit', [AdminScheduleController::class, 'edit'])->name('schedules.edit');
         Route::put('/schedules/{schedule}', [AdminScheduleController::class, 'update'])->name('schedules.update');
         Route::delete('/schedules/{schedule}', [AdminScheduleController::class, 'destroy'])->name('schedules.destroy');
+
+        // Update Status Booking Pembayaran
+        Route::patch('/bookings/{booking}/status', [AdminScheduleController::class, 'updateBookingStatus'])->name('bookings.update-status');
+
         // Vehicles (Armada)
         Route::resource('vehicles', AdminVehicleController::class);
-        // Routes (Dideklarasikan eksplisit menggunakan {id})
+
+        // Routes
         Route::get('/routes', [AdminRouteController::class, 'index'])->name('routes.index');
         Route::get('/routes/create', [AdminRouteController::class, 'create'])->name('routes.create');
         Route::post('/routes', [AdminRouteController::class, 'store'])->name('routes.store');
         Route::get('/routes/{id}/edit', [AdminRouteController::class, 'edit'])->name('routes.edit');
         Route::put('/routes/{id}', [AdminRouteController::class, 'update'])->name('routes.update');
         Route::delete('/routes/{id}', [AdminRouteController::class, 'destroy'])->name('routes.destroy');
+
         // Drivers (Kelola Akun Sopir)
         Route::get('/drivers', [AdminDriverController::class, 'index'])->name('drivers.index');
         Route::get('/drivers/create', [AdminDriverController::class, 'create'])->name('drivers.create');

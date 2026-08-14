@@ -20,16 +20,20 @@ const formatDate = (dateStr) => {
     });
 };
 
+// Direct URL ke endpoint cetak PDF Laravel
+const pdfDownloadUrl = route("booking.ticket", props.booking.booking_code);
+
 // URL WhatsApp Admin untuk konfirmasi pembayaran
 const whatsappUrl = () => {
     const adminPhone = "6281234567890"; // Ganti dengan nomor WA Admin Travel
     const text =
         `Halo Admin, saya ingin konfirmasi pembayaran untuk booking travel.\n\n` +
-        `*Kode Booking:* ${props.booking.booking_code}\n` +
+        `*Kode Booking:* #${props.booking.booking_code}\n` +
         `*Nama:* ${props.booking.customer_name}\n` +
         `*Rute:* ${props.booking.schedule.route.origin} -> ${props.booking.schedule.route.destination}\n` +
         `*Total Bayar:* ${formatRupiah(props.booking.total_amount)}\n\n` +
-        `Berikut saya sertakan bukti transfernya:`;
+        `Berikut saya sertakan bukti transfer & link E-Tiket PDF saya:\n` +
+        `${window.location.origin}/booking/ticket/${props.booking.booking_code}`;
 
     return `https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`;
 };
@@ -138,8 +142,31 @@ const whatsappUrl = () => {
                     </div>
                 </div>
 
-                <!-- Action Button Konfirmasi WhatsApp -->
+                <!-- Action Buttons -->
                 <div class="space-y-3 pt-2">
+                    <!-- Tombol Download / Cetak E-Tiket PDF -->
+                    <a
+                        :href="pdfDownloadUrl"
+                        target="_blank"
+                        class="w-full bg-indigo-600 text-white font-semibold text-sm py-3 px-4 rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-sm"
+                    >
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 2 0 01-2-2V5a2 2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                        </svg>
+                        <span>Unduh E-Tiket / Bukti PDF</span>
+                    </a>
+
+                    <!-- Tombol Konfirmasi WA -->
                     <a
                         :href="whatsappUrl()"
                         target="_blank"
@@ -150,7 +177,7 @@ const whatsappUrl = () => {
 
                     <Link
                         :href="route('booking.search')"
-                        class="block text-center text-xs text-gray-500 hover:text-gray-800"
+                        class="block text-center text-xs text-gray-500 hover:text-gray-800 mt-2"
                     >
                         &larr; Kembali ke Halaman Utama
                     </Link>

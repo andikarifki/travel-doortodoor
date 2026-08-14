@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\Route as TravelRoute;
 use App\Models\Schedule;
 use App\Models\TripManifest;
@@ -125,5 +126,20 @@ class ScheduleController extends Controller
         return Inertia::render('Admin/Schedules/Show', [
             'schedule' => $schedule,
         ]);
+    }
+
+    // Method untuk mengubah status pembayaran booking (pending / paid / cancelled)
+    public function updateBookingStatus(Request $request, $bookingId)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:pending,confirmed,cancelled',
+        ]);
+
+        $booking = Booking::findOrFail($bookingId);
+        $booking->update([
+            'status' => $validated['status'],
+        ]);
+
+        return redirect()->back()->with('success', 'Status pembayaran booking berhasil diperbarui.');
     }
 }
