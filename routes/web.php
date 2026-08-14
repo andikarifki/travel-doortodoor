@@ -70,12 +70,14 @@ Route::middleware('auth')->group(function () {
         Route::put('/routes/{id}', [AdminRouteController::class, 'update'])->name('routes.update');
         Route::delete('/routes/{id}', [AdminRouteController::class, 'destroy'])->name('routes.destroy');
 
-        // Drivers (Kelola Akun Sopir)
+            // Drivers (Kelola Akun Sopir)
         Route::get('/drivers', [AdminDriverController::class, 'index'])->name('drivers.index');
         Route::get('/drivers/create', [AdminDriverController::class, 'create'])->name('drivers.create');
         Route::post('/drivers', [AdminDriverController::class, 'store'])->name('drivers.store');
+        Route::get('/drivers/{id}/edit', [AdminDriverController::class, 'edit'])->name('drivers.edit');
+        Route::put('/drivers/{id}', [AdminDriverController::class, 'update'])->name('drivers.update');
         Route::delete('/drivers/{id}', [AdminDriverController::class, 'destroy'])->name('drivers.destroy');
-    });
+        });
 });
 
 require __DIR__.'/auth.php';

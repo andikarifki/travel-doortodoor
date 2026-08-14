@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 
@@ -44,6 +45,47 @@ class DriverController extends Controller
         ]);
 
         return redirect()->route('admin.drivers.index')->with('success', 'Driver berhasil ditambahkan.');
+    }
+
+    // Form Edit Driver
+    public function edit($id)
+    {
+        $driver = User::where('role', 'driver')->findOrFail($id);
+
+        return Inertia::render('Admin/Drivers/Edit', [
+            'driver' => $driver,
+        ]);
+    }
+
+    // Update Data Driver
+    public function update(Request $request, $id)
+    {
+        $driver = User::where('role', 'driver')->findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                Rule::unique(User::class)->ignore($driver->id),
+            ],
+            'password' => ['nullable', Rules\Password::defaults()], // Password opsional saat edit
+        ]);
+
+        $driver->name = $request->name;
+        $driver->email = $request->email;
+
+        // Update password HANYA jika field password diisi oleh admin
+        if ($request->filled('password')) {
+            $driver->password = Hash::make($request->password);
+        }
+
+        $driver->save();
+
+        return redirect()->route('admin.drivers.index')->with('success', 'Data driver berhasil diperbarui.');
     }
 
     // Hapus Akun Driver
