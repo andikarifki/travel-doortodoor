@@ -75,7 +75,7 @@ const navigation = [
         >
             <!-- Logo Section & Toggle Button -->
             <div
-                class="h-16 flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-800"
+                class="h-16 flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-800 shrink-0"
             >
                 <Link
                     :href="route('dashboard')"
@@ -151,21 +151,40 @@ const navigation = [
                     </span>
                 </NavLink>
             </div>
+        </aside>
 
-            <!-- Bottom User Profile Section -->
-            <div class="p-3 border-t border-gray-100 dark:border-gray-800">
-                <Dropdown align="top" :width="isCollapsed ? '48' : '48'">
-                    <template #trigger>
-                        <button
-                            type="button"
-                            :class="[
-                                isCollapsed
-                                    ? 'justify-center p-2'
-                                    : 'justify-between p-2',
-                                'w-full flex items-center rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-150 text-left',
-                            ]"
+        <!-- ================= 2. MAIN CONTENT WRAPPER ================= -->
+        <div class="flex-1 flex flex-col min-w-0">
+            <!-- Top Navbar (Desktop & Mobile Header) -->
+            <header
+                class="sticky top-0 z-20 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4 sm:px-6"
+            >
+                <!-- Mobile Logo Header (Kiri - Khusus Tampilan HP) -->
+                <div class="flex md:hidden items-center gap-2">
+                    <Link
+                        :href="route('dashboard')"
+                        class="flex items-center gap-2"
+                    >
+                        <ApplicationLogo
+                            class="block h-8 w-auto fill-current text-indigo-600 dark:text-indigo-400"
+                        />
+                        <span class="font-bold text-gray-800 dark:text-white"
+                            >Fazza Travel</span
                         >
-                            <div class="flex items-center gap-x-3 truncate">
+                    </Link>
+                </div>
+
+                <!-- Spacer Kosong untuk Menjaga Alignment Desktop -->
+                <div class="hidden md:block"></div>
+
+                <!-- POJOK KANAN ATAS: Menu Profil & Logout (Desktop) -->
+                <div class="hidden md:flex items-center gap-4 ms-auto">
+                    <Dropdown align="right" width="48">
+                        <template #trigger>
+                            <button
+                                type="button"
+                                class="flex items-center gap-3 p-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-150 text-left focus:outline-none"
+                            >
                                 <span
                                     class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
                                 >
@@ -175,81 +194,68 @@ const navigation = [
                                         )
                                     }}
                                 </span>
-                                <div v-show="!isCollapsed" class="truncate">
+                                <div class="hidden lg:block text-left">
                                     <p
-                                        class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate"
+                                        class="text-sm font-semibold text-gray-800 dark:text-gray-200 leading-tight"
                                     >
                                         {{ $page.props.auth.user.name }}
                                     </p>
                                     <p
-                                        class="text-xs text-gray-400 dark:text-gray-500 truncate"
+                                        class="text-xs text-gray-400 dark:text-gray-500"
                                     >
                                         {{ $page.props.auth.user.email }}
                                     </p>
                                 </div>
-                            </div>
-                            <svg
-                                v-show="!isCollapsed"
-                                class="h-4 w-4 text-gray-400 shrink-0 ms-1"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
+                                <svg
+                                    class="w-4 h-4 text-gray-400 ms-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M19 9l-7 7-7-7"
+                                    />
+                                </svg>
+                            </button>
+                        </template>
+
+                        <template #content>
+                            <div
+                                class="px-4 py-2 border-b border-gray-100 dark:border-gray-700 lg:hidden"
                             >
-                                <path
-                                    fill-rule="evenodd"
-                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                    clip-rule="evenodd"
-                                />
-                            </svg>
-                        </button>
-                    </template>
+                                <p
+                                    class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+                                >
+                                    {{ $page.props.auth.user.name }}
+                                </p>
+                                <p
+                                    class="text-xs text-gray-400 dark:text-gray-500 truncate"
+                                >
+                                    {{ $page.props.auth.user.email }}
+                                </p>
+                            </div>
 
-                    <template #content>
-                        <div
-                            class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500"
-                        >
-                            Pengaturan Akun
-                        </div>
-                        <DropdownLink :href="route('profile.edit')">
-                            Profile
-                        </DropdownLink>
-                        <div
-                            class="border-t border-gray-100 dark:border-gray-700"
-                        />
-                        <DropdownLink
-                            :href="route('logout')"
-                            method="post"
-                            as="button"
-                        >
-                            Log Out
-                        </DropdownLink>
-                    </template>
-                </Dropdown>
-            </div>
-        </aside>
+                            <DropdownLink :href="route('profile.edit')">
+                                👤 Edit Profil
+                            </DropdownLink>
 
-        <!-- ================= 2. MAIN CONTENT WRAPPER ================= -->
-        <div class="flex-1 flex flex-col min-w-0">
-            <!-- Mobile Top Navbar Header -->
-            <nav
-                class="md:hidden sticky top-0 z-40 border-b border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-800"
-            >
-                <div
-                    class="px-4 sm:px-6 flex h-16 items-center justify-between"
-                >
-                    <Link
-                        :href="route('dashboard')"
-                        class="flex items-center gap-2"
-                    >
-                        <ApplicationLogo
-                            class="block h-8 w-auto fill-current text-indigo-600 dark:text-indigo-400"
-                        />
-                        <span class="font-bold text-gray-800 dark:text-white"
-                            >Admin Panel</span
-                        >
-                    </Link>
+                            <DropdownLink
+                                :href="route('logout')"
+                                method="post"
+                                as="button"
+                                class="text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                            >
+                                🚪 Log Out
+                            </DropdownLink>
+                        </template>
+                    </Dropdown>
+                </div>
 
-                    <!-- Hamburger Button Mobile -->
+                <!-- Hamburger Button Mobile (Pojok Kanan HP) -->
+                <div class="flex md:hidden items-center">
                     <button
                         @click="
                             showingNavigationDropdown =
@@ -286,71 +292,71 @@ const navigation = [
                         </svg>
                     </button>
                 </div>
+            </header>
 
-                <!-- Responsive Mobile Menu Dropdown -->
-                <div
-                    v-show="showingNavigationDropdown"
-                    class="border-b border-gray-200 bg-white px-4 pt-2 pb-4 space-y-2 dark:border-gray-700 dark:bg-gray-800"
+            <!-- Responsive Mobile Menu Dropdown -->
+            <div
+                v-show="showingNavigationDropdown"
+                class="md:hidden border-b border-gray-200 bg-white px-4 pt-2 pb-4 space-y-2 dark:border-gray-700 dark:bg-gray-800"
+            >
+                <Link
+                    v-for="item in navigation"
+                    :key="item.name"
+                    :href="item.href"
+                    class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                    <Link
-                        v-for="item in navigation"
-                        :key="item.name"
-                        :href="item.href"
-                        class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                        <span class="me-3">{{ item.icon }}</span>
-                        {{ item.name }}
-                    </Link>
+                    <span class="me-3">{{ item.icon }}</span>
+                    {{ item.name }}
+                </Link>
 
-                    <div
-                        class="border-t border-gray-200 pt-3 dark:border-gray-700"
-                    >
-                        <div class="flex items-center px-3 mb-2">
+                <div
+                    class="border-t border-gray-200 pt-3 dark:border-gray-700 space-y-1"
+                >
+                    <div class="flex items-center px-3 mb-2">
+                        <div
+                            class="me-3 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
+                        >
+                            {{ getUserInitials($page.props.auth.user.name) }}
+                        </div>
+                        <div>
                             <div
-                                class="me-3 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
+                                class="text-sm font-medium text-gray-800 dark:text-gray-200"
                             >
-                                {{
-                                    getUserInitials($page.props.auth.user.name)
-                                }}
+                                {{ $page.props.auth.user.name }}
                             </div>
-                            <div>
-                                <div
-                                    class="text-sm font-medium text-gray-800 dark:text-gray-200"
-                                >
-                                    {{ $page.props.auth.user.name }}
-                                </div>
-                                <div
-                                    class="text-xs text-gray-500 dark:text-gray-400"
-                                >
-                                    {{ $page.props.auth.user.email }}
-                                </div>
+                            <div
+                                class="text-xs text-gray-500 dark:text-gray-400"
+                            >
+                                {{ $page.props.auth.user.email }}
                             </div>
                         </div>
-                        <Link
-                            :href="route('profile.edit')"
-                            class="block px-3 py-2 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                            >Profile</Link
-                        >
-                        <Link
-                            :href="route('logout')"
-                            method="post"
-                            as="button"
-                            class="block w-full text-left px-3 py-2 rounded-md text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
-                            >Log Out</Link
-                        >
                     </div>
+                    <Link
+                        :href="route('profile.edit')"
+                        class="block px-3 py-2 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                        Edit Profile
+                    </Link>
+                    <Link
+                        :href="route('logout')"
+                        method="post"
+                        as="button"
+                        class="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                    >
+                        Log Out
+                    </Link>
                 </div>
-            </nav>
+            </div>
 
             <!-- Header Slot (Page Title) -->
-            <header
+            <div
                 v-if="$slots.header"
                 class="bg-white shadow-sm border-b border-gray-100 dark:bg-gray-800 dark:border-gray-800"
             >
                 <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
-            </header>
+            </div>
 
             <!-- Flash Alert Container -->
             <div
