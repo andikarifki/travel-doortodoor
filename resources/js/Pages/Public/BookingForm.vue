@@ -168,6 +168,36 @@ const formatRupiah = (val) => {
                             >{{ form.errors.drop_off_address }}</span
                         >
                     </div>
+
+                    <!-- Informational Alert Box -->
+                    <div
+                        class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                        <div>
+                            <span class="font-bold">Informasi Biaya Area:</span>
+                            <p class="mt-0.5 leading-relaxed">
+                                Apabila titik penjemputan / pengantaran di luar
+                                jangkauan area utama, akan ada
+                                <strong
+                                    >penyesuaian harga / biaya tambahan</strong
+                                >.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Total & Submit -->
@@ -183,6 +213,12 @@ const formatRupiah = (val) => {
                                         schedule.route.base_price,
                                 )
                             }}
+                        </p>
+                        <p
+                            class="text-[11px] text-amber-600 font-medium mt-0.5"
+                        >
+                            *Belum termasuk penyesuaian harga / biaya tambahan
+                            luar jangkauan (jika ada).
                         </p>
                     </div>
 
