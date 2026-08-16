@@ -1,10 +1,9 @@
 <script setup>
-import { ref } from "vue";
 import { Head, useForm } from "@inertiajs/vue3";
 
 const props = defineProps({
     schedule: Object,
-    bookedSeats: Array,
+    availableSeats: Number,
 });
 
 const form = useForm({
@@ -14,19 +13,8 @@ const form = useForm({
     customer_email: "",
     pick_up_address: "",
     drop_off_address: "",
-    selected_seats: [],
+    quantity: 1,
 });
-
-const toggleSeat = (seatNum) => {
-    if (props.bookedSeats.includes(seatNum)) return;
-
-    const index = form.selected_seats.indexOf(seatNum);
-    if (index > -1) {
-        form.selected_seats.splice(index, 1);
-    } else {
-        form.selected_seats.push(seatNum);
-    }
-};
 
 const submitBooking = () => {
     form.post(route("booking.store"));
@@ -60,34 +48,55 @@ const formatRupiah = (val) => {
             </p>
 
             <form @submit.prevent="submitBooking" class="space-y-6">
-                <!-- 1. Pilih Kursi -->
+                <!-- 1. Jumlah Tiket -->
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2"
-                        >Pilih Nomor Kursi</label
-                    >
-                    <div class="grid grid-cols-5 gap-2 max-w-xs">
-                        <button
-                            v-for="seatNum in schedule.vehicle.capacity"
-                            :key="seatNum"
-                            type="button"
-                            @click="toggleSeat(seatNum)"
-                            :disabled="bookedSeats.includes(seatNum)"
-                            :class="[
-                                'py-2.5 text-sm font-semibold rounded-lg border transition text-center',
-                                bookedSeats.includes(seatNum)
-                                    ? 'bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed'
-                                    : form.selected_seats.includes(seatNum)
-                                      ? 'bg-indigo-600 text-white border-indigo-600'
-                                      : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-500',
-                            ]"
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-bold text-gray-700"
+                            >Jumlah Tiket</label
                         >
-                            {{ seatNum }}
+                        <span class="text-xs text-gray-500 font-medium">
+                            Sisa Kursi:
+                            <strong class="text-indigo-600">{{
+                                availableSeats
+                            }}</strong>
+                        </span>
+                    </div>
+
+                    <div class="flex items-center space-x-3 max-w-xs">
+                        <button
+                            type="button"
+                            @click="if (form.quantity > 1) form.quantity--;"
+                            :disabled="form.quantity <= 1"
+                            class="w-10 h-10 rounded-xl border border-gray-300 flex items-center justify-center font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                            -
+                        </button>
+
+                        <input
+                            v-model.number="form.quantity"
+                            type="number"
+                            min="1"
+                            :max="availableSeats"
+                            class="w-full text-center font-bold text-gray-800 rounded-xl border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+
+                        <button
+                            type="button"
+                            @click="
+                                if (form.quantity < availableSeats)
+                                    form.quantity++;
+                            "
+                            :disabled="form.quantity >= availableSeats"
+                            class="w-10 h-10 rounded-xl border border-gray-300 flex items-center justify-center font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                            +
                         </button>
                     </div>
+
                     <span
-                        v-if="form.errors.selected_seats"
+                        v-if="form.errors.quantity"
                         class="text-xs text-red-500 mt-1 block"
-                        >{{ form.errors.selected_seats }}</span
+                        >{{ form.errors.quantity }}</span
                     >
                 </div>
 
@@ -209,7 +218,7 @@ const formatRupiah = (val) => {
                         <p class="text-xl font-bold text-indigo-600">
                             {{
                                 formatRupiah(
-                                    form.selected_seats.length *
+                                    (form.quantity || 0) *
                                         schedule.route.base_price,
                                 )
                             }}
@@ -225,9 +234,12 @@ const formatRupiah = (val) => {
                     <button
                         type="submit"
                         :disabled="
-                            form.processing || form.selected_seats.length === 0
+                            form.processing ||
+                            !form.quantity ||
+                            form.quantity < 1 ||
+                            form.quantity > availableSeats
                         "
-                        class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white font-semibold text-sm px-6 py-3 rounded-xl transition"
+                        class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white font-semibold text-sm px-6 py-3 rounded-xl transition cursor-pointer disabled:cursor-not-allowed"
                     >
                         Proses Booking Tiket
                     </button>

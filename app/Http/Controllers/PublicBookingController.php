@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Schedule;
+use App\Models\Seat; // Pastikan model Seat di-import jika digunakan terpisah
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
@@ -28,7 +29,10 @@ class PublicBookingController extends Controller
             ->orderBy('departure_time', 'asc')
             ->get()
             ->map(function ($schedule) {
-                $bookedSeatsCount = $schedule->bookings->flatMap->seats->count();
+                $bookedSeatsCount = $schedule->bookings
+                    ->where('status', '!=', 'cancelled')
+                    ->flatMap->seats->count();
+                    
                 $schedule->available_seats = $schedule->vehicle->capacity - $bookedSeatsCount;
 
                 return $schedule;
@@ -45,19 +49,20 @@ class PublicBookingController extends Controller
     {
         $schedule->load(['route', 'vehicle', 'bookings.seats']);
 
-        $bookedSeatNumbers = $schedule->bookings
+        $bookedSeatsCount = $schedule->bookings
             ->where('status', '!=', 'cancelled')
             ->flatMap->seats
-            ->pluck('seat_number')
-            ->toArray();
+            ->count();
+
+        $availableSeatsCount = $schedule->vehicle->capacity - $bookedSeatsCount;
 
         return Inertia::render('Public/BookingForm', [
             'schedule' => $schedule,
-            'bookedSeats' => $bookedSeatNumbers,
+            'availableSeats' => $availableSeatsCount,
         ]);
     }
 
-    // 3. Simpan Booking & Redirect Langsung ke WhatsApp Admin (Tanpa Halaman Sukses)
+    // 3. Simpan Booking & Redirect Langsung ke WhatsApp Admin
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -67,17 +72,42 @@ class PublicBookingController extends Controller
             'customer_email' => 'nullable|email|max:255',
             'pick_up_address' => 'required|string',
             'drop_off_address' => 'required|string',
-            'selected_seats' => 'required|array|min:1',
-            'selected_seats.*' => 'integer|min:1',
+            'quantity' => 'required|integer|min:1',
         ]);
 
-        $schedule = Schedule::with(['route', 'vehicle'])->findOrFail($validated['schedule_id']);
+        $schedule = Schedule::with(['route', 'vehicle', 'bookings.seats'])->findOrFail($validated['schedule_id']);
 
-        $totalSeats = count($validated['selected_seats']);
+        // A. Cek Nomor Kursi yang Sudah Terisi
+        $bookedSeatNumbers = $schedule->bookings
+            ->where('status', '!=', 'cancelled')
+            ->flatMap->seats
+            ->pluck('seat_number')
+            ->toArray();
+
+        // B. Cari Kursi Kosong Secara Otomatis Berdasarkan Kapasitas Kendaraan
+        $assignedSeats = [];
+        for ($i = 1; $i <= $schedule->vehicle->capacity; $i++) {
+            if (!in_array($i, $bookedSeatNumbers)) {
+                $assignedSeats[] = $i;
+            }
+
+            if (count($assignedSeats) === (int) $validated['quantity']) {
+                break;
+            }
+        }
+
+        // Cek jika kursi yang tersedia tidak cukup
+        if (count($assignedSeats) < (int) $validated['quantity']) {
+            return redirect()->back()->withErrors([
+                'quantity' => 'Sisa kursi tidak mencukupi untuk jumlah pemesanan ini.',
+            ]);
+        }
+
+        $totalSeats = count($assignedSeats);
         $totalAmount = $totalSeats * $schedule->route->base_price;
         $bookingCode = 'TRV-'.strtoupper(Str::random(6));
 
-        // A. Simpan data booking utama ke Database
+        // C. Simpan data booking utama ke Database
         $booking = Booking::create([
             'booking_code' => $bookingCode,
             'schedule_id' => $schedule->id,
@@ -90,17 +120,17 @@ class PublicBookingController extends Controller
             'status' => 'pending',
         ]);
 
-        // B. Simpan nomor kursi terpilih ke relasi seats
-        foreach ($validated['selected_seats'] as $seatNumber) {
+        // D. Simpan nomor kursi otomatis ke relasi seats
+        foreach ($assignedSeats as $seatNumber) {
             $booking->seats()->create([
                 'seat_number' => $seatNumber,
             ]);
         }
 
-        // C. Susun format teks pesan WhatsApp Admin
-        $seatsText = implode(', ', $validated['selected_seats']);
+        // E. Susun format teks pesan WhatsApp Admin
+        $seatsText = implode(', ', $assignedSeats);
         $formattedPrice = 'Rp '.number_format($totalAmount, 0, ',', '.');
-        $adminWaNumber = '62895380744368'; // Sesuaikan dengan nomor WhatsApp Admin Anda
+        $adminWaNumber = '62895380744368';
 
         $message = "*BOOKING TIKET BARU*\n";
         $message .= "--------------------------------------\n";
@@ -108,7 +138,7 @@ class PublicBookingController extends Controller
         $message .= "*Nama:* ".$validated['customer_name']."\n";
         $message .= "*No HP/WA:* ".$validated['customer_phone']."\n";
         $message .= "*Rute:* ".$schedule->route->origin." -> ".$schedule->route->destination."\n";
-        $message .= "*Kursi:* No. ".$seatsText." (".$totalSeats." Kursi)\n";
+        $message .= "*Jumlah Tiket:* ".$totalSeats." Tiket (Kursi: No. ".$seatsText.")\n";
         $message .= "*Alamat Jemput:* ".$validated['pick_up_address']."\n";
         $message .= "*Alamat Antar:* ".$validated['drop_off_address']."\n";
         $message .= "*Total Tiket:* ".$formattedPrice."\n";
@@ -117,11 +147,11 @@ class PublicBookingController extends Controller
 
         $waUrl = 'https://wa.me/'.$adminWaNumber.'?text='.urlencode($message);
 
-        // D. Redirect eksternal Inertia langsung ke WhatsApp Admin
+        // F. Redirect eksternal Inertia langsung ke WhatsApp Admin
         return Inertia::location($waUrl);
     }
 
-    // 4. Halaman Sukses (Opsional / Tetap dipertahankan jika dipanggil dari luar)
+    // 4. Halaman Sukses
     public function success($code)
     {
         $booking = Booking::with(['schedule.route', 'schedule.vehicle', 'seats'])
