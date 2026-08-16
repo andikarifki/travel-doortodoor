@@ -1,4 +1,5 @@
 <script setup>
+import { computed, watch } from "vue";
 import { Head, useForm } from "@inertiajs/vue3";
 
 const props = defineProps({
@@ -7,13 +8,32 @@ const props = defineProps({
 });
 
 const form = useForm({
-    schedule_id: props.schedule.id,
+    schedule_id: props.schedule?.id,
     customer_name: "",
     customer_phone: "",
     customer_email: "",
     pick_up_address: "",
     drop_off_address: "",
     quantity: 1,
+});
+
+// Guard agar input manual quantity tidak melebih batas atau di bawah 1
+watch(
+    () => form.quantity,
+    (newVal) => {
+        if (newVal > props.availableSeats) {
+            form.quantity = props.availableSeats;
+        } else if (newVal < 1 || !newVal) {
+            form.quantity = 1;
+        }
+    },
+);
+
+// Computed total pembayaran
+const totalPrice = computed(() => {
+    const price = props.schedule?.route?.base_price || 0;
+    const qty = form.quantity || 0;
+    return qty * price;
 });
 
 const submitBooking = () => {
@@ -25,7 +45,7 @@ const formatRupiah = (val) => {
         style: "currency",
         currency: "IDR",
         maximumFractionDigits: 0,
-    }).format(val);
+    }).format(val || 0);
 };
 </script>
 
@@ -41,10 +61,10 @@ const formatRupiah = (val) => {
             </h1>
             <p class="text-sm text-gray-500 mb-6">
                 Rute:
-                <span class="font-semibold text-gray-700"
-                    >{{ schedule.route.origin }} &rarr;
-                    {{ schedule.route.destination }}</span
-                >
+                <span class="font-semibold text-gray-700">
+                    {{ schedule?.route?.origin }} &rarr;
+                    {{ schedule?.route?.destination }}
+                </span>
             </p>
 
             <form @submit.prevent="submitBooking" class="space-y-6">
@@ -65,7 +85,7 @@ const formatRupiah = (val) => {
                     <div class="flex items-center space-x-3 max-w-xs">
                         <button
                             type="button"
-                            @click="if (form.quantity > 1) form.quantity--;"
+                            @click="form.quantity--"
                             :disabled="form.quantity <= 1"
                             class="w-10 h-10 rounded-xl border border-gray-300 flex items-center justify-center font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >
@@ -82,10 +102,7 @@ const formatRupiah = (val) => {
 
                         <button
                             type="button"
-                            @click="
-                                if (form.quantity < availableSeats)
-                                    form.quantity++;
-                            "
+                            @click="form.quantity++"
                             :disabled="form.quantity >= availableSeats"
                             class="w-10 h-10 rounded-xl border border-gray-300 flex items-center justify-center font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >
@@ -96,8 +113,9 @@ const formatRupiah = (val) => {
                     <span
                         v-if="form.errors.quantity"
                         class="text-xs text-red-500 mt-1 block"
-                        >{{ form.errors.quantity }}</span
                     >
+                        {{ form.errors.quantity }}
+                    </span>
                 </div>
 
                 <!-- 2. Data Pemesan -->
@@ -116,22 +134,24 @@ const formatRupiah = (val) => {
                         <span
                             v-if="form.errors.customer_name"
                             class="text-xs text-red-500 mt-1 block"
-                            >{{ form.errors.customer_name }}</span
                         >
+                            {{ form.errors.customer_name }}
+                        </span>
                     </div>
 
                     <div>
                         <input
                             v-model="form.customer_phone"
-                            type="text"
+                            type="tel"
                             placeholder="Nomor WhatsApp (misal: 08123456789)"
                             class="w-full rounded-xl border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                         />
                         <span
                             v-if="form.errors.customer_phone"
                             class="text-xs text-red-500 mt-1 block"
-                            >{{ form.errors.customer_phone }}</span
                         >
+                            {{ form.errors.customer_phone }}
+                        </span>
                     </div>
 
                     <div>
@@ -141,6 +161,12 @@ const formatRupiah = (val) => {
                             placeholder="Email (Opsional)"
                             class="w-full rounded-xl border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                         />
+                        <span
+                            v-if="form.errors.customer_email"
+                            class="text-xs text-red-500 mt-1 block"
+                        >
+                            {{ form.errors.customer_email }}
+                        </span>
                     </div>
                 </div>
 
@@ -160,8 +186,9 @@ const formatRupiah = (val) => {
                         <span
                             v-if="form.errors.pick_up_address"
                             class="text-xs text-red-500 mt-1 block"
-                            >{{ form.errors.pick_up_address }}</span
                         >
+                            {{ form.errors.pick_up_address }}
+                        </span>
                     </div>
 
                     <div>
@@ -174,8 +201,9 @@ const formatRupiah = (val) => {
                         <span
                             v-if="form.errors.drop_off_address"
                             class="text-xs text-red-500 mt-1 block"
-                            >{{ form.errors.drop_off_address }}</span
                         >
+                            {{ form.errors.drop_off_address }}
+                        </span>
                     </div>
 
                     <!-- Informational Alert Box -->
@@ -216,12 +244,7 @@ const formatRupiah = (val) => {
                     <div>
                         <p class="text-xs text-gray-500">Total Pembayaran</p>
                         <p class="text-xl font-bold text-indigo-600">
-                            {{
-                                formatRupiah(
-                                    (form.quantity || 0) *
-                                        schedule.route.base_price,
-                                )
-                            }}
+                            {{ formatRupiah(totalPrice) }}
                         </p>
                         <p
                             class="text-[11px] text-amber-600 font-medium mt-0.5"
@@ -239,9 +262,34 @@ const formatRupiah = (val) => {
                             form.quantity < 1 ||
                             form.quantity > availableSeats
                         "
-                        class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white font-semibold text-sm px-6 py-3 rounded-xl transition cursor-pointer disabled:cursor-not-allowed"
+                        class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white font-semibold text-sm px-6 py-3 rounded-xl transition cursor-pointer disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                        Proses Booking Tiket
+                        <svg
+                            v-if="form.processing"
+                            class="animate-spin h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                        >
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"
+                            ></circle>
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                        </svg>
+                        <span>{{
+                            form.processing
+                                ? "Memproses..."
+                                : "Proses Booking Tiket"
+                        }}</span>
                     </button>
                 </div>
             </form>

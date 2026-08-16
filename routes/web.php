@@ -24,6 +24,8 @@ Route::get('/schedule/{schedule}', [PublicBookingController::class, 'show'])->na
 // Proses submit booking
 Route::post('/booking', [PublicBookingController::class, 'store'])->name('booking.store');
 
+Route::get('/booking/{bookingCode}', [BookingController::class, 'show'])->name('booking.show');
+
 // Halaman konfirmasi / e-ticket
 Route::get('/booking/success/{code}', [PublicBookingController::class, 'success'])->name('booking.success');
 
